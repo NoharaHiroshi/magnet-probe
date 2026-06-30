@@ -1,0 +1,45 @@
+# 公网 VPS 一键部署：MongoDB + 爬虫 + Web
+#   docker compose up -d --build
+#
+# 关键点：crawler/web 用 network_mode: host（仅 Linux 有效），
+# 让 DHT 用稳定的公网 UDP 端口收发，从而能收到 announce_peer（可连做种者）。
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # 只绑定到本机回环，不对公网暴露数据库
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  crawler:
+    build: .
+    restart: unless-stopped
+    network_mode: host        # DHT 需要主机网络（公网 IP + 固定 UDP 端口）
+    depends_on:
+      - mongo
+    environment:
+      - MP_MONGO_URI=mongodb://127.0.0.1:27017
+      - MP_MONGO_DB=magnet_probe
+      - MP_DHT_PORTS=6881,6882,6883,6884
+      - MP_WORKERS=300
+      - MP_PEER_CONCURRENCY=8
+      - MP_MAX_PER_SECOND=1500
+    command: python main.py crawl
+
+  web:
+    build: .
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - mongo
+    environment:
+      - MP_MONGO_URI=mongodb://127.0.0.1:27017
+      - MP_MONGO_DB=magnet_probe
+      - MP_WEB_HOST=127.0.0.1   # 仅本机，建议用 nginx 反代 + 鉴权对外
+      - MP_WEB_PORT=8080
+    command: python main.py web
+
+volumes:
+  mongo-data:

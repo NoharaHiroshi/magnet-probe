@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>磁力探测 · Magnet Probe</title>
+<style>
+  :root { --bg:#0f1420; --card:#1a2233; --fg:#e6edf3; --muted:#8b98ad; --accent:#4f8cff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"PingFang SC",sans-serif;
+         background:var(--bg); color:var(--fg); }
+  header { padding:24px 16px; text-align:center; }
+  h1 { margin:0 0 4px; font-size:22px; }
+  .sub { color:var(--muted); font-size:13px; }
+  .bar { max-width:880px; margin:0 auto; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; }
+  input, select, button { padding:10px 12px; border-radius:8px; border:1px solid #2b3550;
+         background:var(--card); color:var(--fg); font-size:14px; }
+  input { flex:1; min-width:200px; }
+  button { background:var(--accent); border:none; cursor:pointer; }
+  button:hover { filter:brightness(1.1); }
+  .results { max-width:880px; margin:16px auto; padding:0 16px; }
+  .item { background:var(--card); border:1px solid #232d44; border-radius:10px;
+          padding:12px 14px; margin-bottom:10px; }
+  .name { font-weight:600; word-break:break-all; }
+  .meta { color:var(--muted); font-size:12px; margin-top:6px; display:flex; gap:14px; flex-wrap:wrap; }
+  .actions { margin-top:8px; }
+  .actions a, .actions button { font-size:12px; padding:6px 10px; }
+  .actions a { color:var(--accent); text-decoration:none; border:1px solid #2b3550;
+               border-radius:6px; }
+  .empty { text-align:center; color:var(--muted); padding:40px; }
+  .stat { text-align:center; color:var(--muted); font-size:12px; margin-top:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>磁力探测 · Magnet Probe</h1>
+  <div class="sub">基于公开 DHT 网络的种子索引 · 仅供研究学习，请遵守当地法律</div>
+  <div class="stat" id="stat"></div>
+</header>
+
+<div class="bar">
+  <input id="q" placeholder="关键词（支持中英文模糊，如 ubuntu / 电影）" autofocus>
+  <select id="sort">
+    <option value="relevance">相关度</option>
+    <option value="hot">热度</option>
+    <option value="size">大小</option>
+    <option value="date">最新</option>
+  </select>
+  <button onclick="go(1)">搜索</button>
+</div>
+
+<div class="results" id="results"></div>
+<div class="bar" id="pager" style="justify-content:center; display:none;">
+  <button onclick="go(state.page-1)">上一页</button>
+  <span id="pageno" style="align-self:center; color:var(--muted)"></span>
+  <button onclick="go(state.page+1)">下一页</button>
+</div>
+
+<script>
+const state = { page: 1 };
+function fmtSize(n){ if(!n) return "?"; const u=["B","KB","MB","GB","TB"]; let i=0;
+  while(n>=1024 && i<u.length-1){ n/=1024; i++; } return n.toFixed(1)+u[i]; }
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+async function go(page){
+  if(page<1) page=1;
+  state.page = page;
+  const q = document.getElementById("q").value.trim();
+  const sort = document.getElementById("sort").value;
+  const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&sort=${sort}&page=${page}&size=20`);
+  const data = await r.json();
+  render(data);
+}
+function render(data){
+  const box = document.getElementById("results");
+  if(!data.items.length){ box.innerHTML = '<div class="empty">没有结果（爬虫需运行一段时间积累数据）</div>';
+    document.getElementById("pager").style.display="none"; return; }
+  box.innerHTML = data.items.map(it => `
+    <div class="item">
+      <div class="name">${esc(it.name)}</div>
+      <div class="meta">
+        <span>${fmtSize(it.length)}</span>
+        <span>${it.file_count} 文件</span>
+        <span>🔥 ${it.hot}</span>
+        <span>${(it.created_at||"").slice(0,10)}</span>
+      </div>
+      <div class="actions">
+        <a href="${it.magnet}">打开磁力</a>
+        <button onclick="navigator.clipboard.writeText('${it.magnet}')">复制链接</button>
+      </div>
+    </div>`).join("");
+  const pager = document.getElementById("pager");
+  pager.style.display = "flex";
+  document.getElementById("pageno").textContent = "第 " + data.page + " 页";
+}
+async function loadStats(){
+  try{ const r = await fetch("/api/stats"); const s = await r.json();
+    document.getElementById("stat").textContent = "已收录 " + s.total + " 条种子"; }catch(e){}
+}
+document.getElementById("q").addEventListener("keydown", e => { if(e.key==="Enter") go(1); });
+loadStats();
+go(1);
+</script>
+</body>
+</html>

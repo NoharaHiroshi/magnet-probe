@@ -1,0 +1,5 @@
+motor>=3.3
+fastapi>=0.110
+uvicorn[standard]>=0.29
+# 可选：安装后自动启用，加速 asyncio 事件循环（未安装则回退标准循环）
+uvloop>=0.19; sys_platform != "win32"

@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# 运行产物
+*.log
+*.torrent
+
+# 系统
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
