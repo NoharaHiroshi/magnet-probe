@@ -60,20 +60,38 @@ def decode_peers(values):
 
 
 class KTable:
-    """简单有界节点表（FIFO 淘汰），仅用于持续发 find_node 以维持曝光。"""
+    """有界、去重的节点表，FIFO 消费。
+
+    去重 + 从队首取节点，保证持续向**新**节点扩散，避免在单个"自我宣告"的
+    坏节点上打转（否则会形成正反馈，整张表被一个节点占满，无法 fan-out）。
+    """
 
     def __init__(self, maxsize: int):
         self.maxsize = maxsize
-        self._dq = deque(maxlen=maxsize)
+        self._dq = deque()
+        self._seen = set()   # 当前在表中的 (ip, port)，用于去重
 
     def add(self, node):
+        nid, ip, port = node
+        if port <= 0 or port > 65535:
+            return
+        key = (ip, port)
+        if key in self._seen:
+            return
+        self._seen.add(key)
         self._dq.append(node)
+        if len(self._dq) > self.maxsize:
+            old = self._dq.popleft()
+            self._seen.discard((old[1], old[2]))
 
     def __len__(self):
         return len(self._dq)
 
-    def sample(self, n):
-        """返回最近的 n 个节点。"""
-        if n >= len(self._dq):
-            return list(self._dq)
-        return list(self._dq)[-n:]
+    def pop_batch(self, n):
+        """从队首取出 n 个节点（取出即移出表，避免紧密重复查询同一节点）。"""
+        out = []
+        for _ in range(min(n, len(self._dq))):
+            nid, ip, port = self._dq.popleft()
+            self._seen.discard((ip, port))
+            out.append((nid, ip, port))
+        return out

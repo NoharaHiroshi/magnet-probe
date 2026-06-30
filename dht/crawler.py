@@ -172,16 +172,16 @@ class DHTNode(asyncio.DatagramProtocol):
             self.sink.push(info_hash, peer_addr)
 
     async def auto_find(self, interval):
-        """持续向已知节点发 find_node，维持曝光、扩充节点池。"""
+        """持续向**新**节点发 find_node，向 keyspace 扩散、维持曝光。"""
         while True:
             await asyncio.sleep(interval)
-            if not self.bucket.take():
-                continue
-            nodes = self.table.sample(8)
+            nodes = self.table.pop_batch(8)
             if not nodes:
                 self.bootstrap_self()
                 continue
             for nid, ip, port in nodes:
+                if not self.bucket.take():   # 令牌桶按"包"计数
+                    break
                 target = routing.random_id()
                 # 用邻居 id 提升被对端收录的概率
                 self.self_id = routing.neighbor(nid, self.self_id, 6)
