@@ -18,6 +18,8 @@
   input { flex:1; min-width:200px; }
   button { background:var(--accent); border:none; cursor:pointer; }
   button:hover { filter:brightness(1.1); }
+  button:disabled { background:#2b3550; color:var(--muted); cursor:not-allowed; filter:none; }
+  #jump { width:64px; text-align:center; }
   .results { max-width:880px; margin:16px auto; padding:0 16px; }
   .item { background:var(--card); border:1px solid #232d44; border-radius:10px;
           padding:12px 14px; margin-bottom:10px; }
@@ -50,26 +52,36 @@
 </div>
 
 <div class="results" id="results"></div>
-<div class="bar" id="pager" style="justify-content:center; display:none;">
-  <button onclick="go(state.page-1)">上一页</button>
-  <span id="pageno" style="align-self:center; color:var(--muted)"></span>
-  <button onclick="go(state.page+1)">下一页</button>
+<div class="bar" id="pager" style="justify-content:center; align-items:center; display:none; gap:6px;">
+  <button id="prevBtn" onclick="go(state.page-1)">上一页</button>
+  <span id="pageno" style="color:var(--muted)"></span>
+  <button id="nextBtn" onclick="go(state.page+1)">下一页</button>
+  <span style="color:var(--muted)">跳至</span>
+  <input id="jump" type="number" min="1" placeholder="页码">
+  <button onclick="jumpTo()">跳转</button>
 </div>
 
 <script>
-const state = { page: 1 };
+const state = { page: 1, totalPages: 1 };
 function fmtSize(n){ if(!n) return "?"; const u=["B","KB","MB","GB","TB"]; let i=0;
   while(n>=1024 && i<u.length-1){ n/=1024; i++; } return n.toFixed(1)+u[i]; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function scrollTop(){ window.scrollTo({ top: 0, behavior: "smooth" }); }
 
 async function go(page){
-  if(page<1) page=1;
+  if(page < 1) page = 1;
+  if(state.totalPages && page > state.totalPages) page = state.totalPages;
   state.page = page;
   const q = document.getElementById("q").value.trim();
   const sort = document.getElementById("sort").value;
   const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&sort=${sort}&page=${page}&size=20`);
   const data = await r.json();
   render(data);
+  scrollTop();                         // 翻页/跳转后自动回到顶部
+}
+function jumpTo(){
+  const v = parseInt(document.getElementById("jump").value, 10);
+  if(!isNaN(v)) go(v);
 }
 function render(data){
   const box = document.getElementById("results");
@@ -89,15 +101,24 @@ function render(data){
         <button onclick="navigator.clipboard.writeText('${it.magnet}')">复制链接</button>
       </div>
     </div>`).join("");
+  state.totalPages = data.total_pages || 1;
   const pager = document.getElementById("pager");
   pager.style.display = "flex";
-  document.getElementById("pageno").textContent = "第 " + data.page + " 页";
+  document.getElementById("pageno").textContent =
+    `第 ${data.page} / ${state.totalPages} 页（共 ${data.total} 条）`;
+  document.getElementById("prevBtn").disabled = data.page <= 1;
+  document.getElementById("nextBtn").disabled = data.page >= state.totalPages;
+  const jump = document.getElementById("jump");
+  jump.max = state.totalPages;
+  jump.value = "";
+  jump.placeholder = data.page;
 }
 async function loadStats(){
   try{ const r = await fetch("/api/stats"); const s = await r.json();
     document.getElementById("stat").textContent = "已收录 " + s.total + " 条种子"; }catch(e){}
 }
 document.getElementById("q").addEventListener("keydown", e => { if(e.key==="Enter") go(1); });
+document.getElementById("jump").addEventListener("keydown", e => { if(e.key==="Enter") jumpTo(); });
 loadStats();
 go(1);
 </script>

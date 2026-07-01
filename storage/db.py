@@ -150,7 +150,14 @@ class Store:
                 "created_at": (d.get("created_at") or datetime.now(timezone.utc)).isoformat(),
                 "files": d.get("files", [])[:50],
             })
-        result = {"total_estimate": len(items), "page": page, "size": size, "items": items}
+        # 真实总数，用于分页跳转（空查询用快速估算，有条件用精确计数，均走索引）
+        if query:
+            total = await self.col.count_documents(query)
+        else:
+            total = await self.col.estimated_document_count()
+        total_pages = max(1, (total + size - 1) // size)
+        result = {"total": total, "total_pages": total_pages,
+                  "page": page, "size": size, "items": items}
         self.cache.put(cache_key, result)
         return result
 
