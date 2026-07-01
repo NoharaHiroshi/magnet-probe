@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Sans SC',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#0f172a;background:#f6f7f8;}
+  ::selection{background:#bbf7d0;}
+  input::placeholder{color:#94a3b8;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#f6f7f8;font-family:'Noto Sans SC',system-ui,sans-serif;">
+
+  <!-- ============ 顶部导航（结果页 / 详情页共用） ============ -->
+  <sc-if value="{{ notHome }}" hint-placeholder-val="{{ false }}">
+    <div style="position:sticky;top:0;z-index:20;height:64px;display:flex;align-items:center;gap:20px;padding:0 32px;background:#fff;box-shadow:0 1px 0 #eef1f4;">
+      <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
+        <div style="width:30px;height:30px;border-radius:9px;background:#16a34a;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:16px;font-weight:700;">磁</span></div>
+        <div style="font-size:17px;font-weight:700;">磁力搜索</div>
+      </div>
+      <div style="flex:1;max-width:520px;background:#f6f7f8;border-radius:11px;display:flex;align-items:center;padding:4px 4px 4px 16px;">
+        <input value="{{ query }}" onInput="{{ onQueryInput }}" onKeyDown="{{ onSearchKey }}" placeholder="搜索磁力资源…" style="flex:1;border:none;outline:none;font-size:14px;color:#0f172a;font-family:inherit;background:transparent;" />
+        <button onClick="{{ doSearch }}" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;" style-hover="background:#15803d;">搜索</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 首页 ============ -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 24px;">
+      <div style="flex:0 0 22vh;"></div>
+      <div style="width:64px;height:64px;border-radius:19px;background:#16a34a;display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 10px 26px rgba(22,163,74,.30);"><span style="color:#fff;font-size:31px;font-weight:700;">磁</span></div>
+      <div style="font-size:30px;font-weight:700;margin-bottom:9px;color:#0f172a;letter-spacing:1px;">磁力搜索</div>
+      <div style="font-size:15px;color:#64748b;margin-bottom:36px;">简单 · 快速 · 干净的全网磁力聚合搜索</div>
+      <div style="width:100%;max-width:660px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(15,23,42,.09);display:flex;align-items:center;padding:8px 8px 8px 24px;">
+        <input value="{{ query }}" onInput="{{ onQueryInput }}" onKeyDown="{{ onSearchKey }}" placeholder="输入关键词、番号或影片名开始搜索…" style="flex:1;border:none;outline:none;font-size:16px;color:#0f172a;font-family:inherit;background:transparent;" />
+        <button onClick="{{ doSearch }}" style="background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 34px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;" style-hover="background:#15803d;">搜索</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;justify-content:center;max-width:660px;">
+        <sc-for list="{{ hotKeywords }}" as="k" hint-placeholder-count="5">
+          <div onClick="{{ k.onClick }}" style="font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:20px;padding:8px 16px;cursor:pointer;" style-hover="border-color:#16a34a;color:#16a34a;">{{ k.label }}</div>
+        </sc-for>
+      </div>
+      <div style="margin-top:48px;font-size:13px;color:#94a3b8;">已收录 <b style="color:#16a34a;">128,400,912</b> 个磁力资源 · 每日实时更新</div>
+      <div style="flex:1;"></div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 搜索结果 ============ -->
+  <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:960px;margin:0 auto;padding:26px 24px 60px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:14px;color:#64748b;">关于 <b style="color:#0f172a;">{{ query }}</b> 找到 <b style="color:#0f172a;">1,284</b> 条结果 · 0.03 秒</div>
+        <div style="display:flex;gap:4px;background:#fff;border:1px solid #e5e8ec;border-radius:10px;padding:4px;">
+          <span style="font-size:13px;color:#fff;background:#16a34a;font-weight:600;border-radius:7px;padding:6px 14px;">综合</span>
+          <span style="font-size:13px;color:#64748b;border-radius:7px;padding:6px 14px;cursor:pointer;">做种</span>
+          <span style="font-size:13px;color:#64748b;border-radius:7px;padding:6px 14px;cursor:pointer;">时间</span>
+          <span style="font-size:13px;color:#64748b;border-radius:7px;padding:6px 14px;cursor:pointer;">大小</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <sc-for list="{{ results }}" as="r" hint-placeholder-count="8">
+          <div style="background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04);display:flex;align-items:center;gap:18px;" style-hover="border-color:#bbf7d0;box-shadow:0 6px 18px rgba(22,163,74,.10);">
+            <span style="display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:40px;border-radius:10px;background:#f0fdf4;color:#16a34a;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;">{{ r.format }}</span>
+            <div onClick="{{ r.onOpen }}" style="flex:1;min-width:0;cursor:pointer;">
+              <div style="font-size:15px;font-weight:500;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" style-hover="color:#16a34a;">{{ r.name }}</div>
+              <div style="display:flex;gap:8px;margin-top:9px;">
+                <span style="font-size:12px;color:#64748b;background:#f6f7f8;border-radius:6px;padding:3px 9px;font-family:'JetBrains Mono',monospace;">{{ r.size }}</span>
+                <span style="font-size:12px;color:#64748b;background:#f6f7f8;border-radius:6px;padding:3px 9px;">{{ r.files }} 文件</span>
+                <span style="font-size:12px;color:#64748b;background:#f6f7f8;border-radius:6px;padding:3px 9px;font-family:'JetBrains Mono',monospace;">{{ r.date }}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+              <div style="display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #dcfce7;border-radius:8px;padding:6px 11px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;"></span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#16a34a;">{{ r.seeders }}</span>
+                <span style="font-size:11px;color:#16a34a;">做种</span>
+              </div>
+              <div style="text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#334155;">{{ r.leechers }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">下载</div></div>
+              <div style="text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#334155;">{{ r.hot }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">热度</div></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button onClick="{{ r.onCopy }}" style="background:#fff;border:1px solid #e2e8f0;color:#334155;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;" style-hover="background:#f8fafc;border-color:#cbd5e1;">复制</button>
+              <a href="{{ r.magnet }}" style="background:#16a34a;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;" style-hover="background:#15803d;">打开磁力</a>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:26px;">
+        <span style="font-size:13px;color:#fff;background:#16a34a;border-radius:8px;padding:8px 13px;font-family:'JetBrains Mono',monospace;">1</span>
+        <span style="font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:8px;padding:8px 13px;font-family:'JetBrains Mono',monospace;cursor:pointer;">2</span>
+        <span style="font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:8px;padding:8px 13px;font-family:'JetBrains Mono',monospace;cursor:pointer;">3</span>
+        <span style="font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:8px;padding:8px 13px;cursor:pointer;">下一页 ›</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 资源详情 ============ -->
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:840px;margin:0 auto;padding:24px 24px 60px;">
+      <div onClick="{{ goResults }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#64748b;margin-bottom:16px;cursor:pointer;" style-hover="color:#16a34a;">‹ 返回搜索结果</div>
+      <div style="background:#fff;border:1px solid #eef1f4;border-radius:16px;padding:28px 30px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:10px;background:#f0fdf4;color:#16a34a;font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;margin-top:2px;">{{ detail.format }}</span>
+          <h1 style="font-size:23px;font-weight:700;margin:0;line-height:1.45;color:#0f172a;">{{ detail.name }}</h1>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;">
+          <button onClick="{{ detail.onCopy }}" style="background:#16a34a;color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;" style-hover="background:#15803d;">复制磁力链接</button>
+          <a href="{{ detail.magnet }}" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;" style-hover="background:#dcfce7;">打开磁力链接</a>
+        </div>
+        <div style="margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#64748b;background:#f6f7f8;border-radius:10px;padding:13px 15px;word-break:break-all;line-height:1.6;">{{ detail.magnet }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px;">
+        <div style="background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:20px;"><div style="font-size:22px;font-weight:700;color:#16a34a;font-family:'JetBrains Mono',monospace;">{{ detail.seeders }}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">做种数</div></div>
+        <div style="background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:20px;"><div style="font-size:22px;font-weight:700;color:#334155;font-family:'JetBrains Mono',monospace;">{{ detail.leechers }}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">下载数</div></div>
+        <div style="background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:20px;"><div style="font-size:22px;font-weight:700;color:#334155;font-family:'JetBrains Mono',monospace;">{{ detail.size }}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">总大小 · {{ detail.files }} 文件</div></div>
+      </div>
+      <div style="background:#fff;border:1px solid #eef1f4;border-radius:16px;padding:24px 28px;margin-top:14px;">
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:12px;">文件列表 <span style="color:#94a3b8;font-weight:400;">({{ detail.files }})</span></div>
+        <sc-for list="{{ detailFiles }}" as="f" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f6f7f8;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:4px 7px;border-radius:6px;background:#f6f7f8;color:#64748b;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;">{{ f.ext }}</span>
+            <div style="flex:1;font-size:14px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.name }}</div>
+            <div style="font-size:13px;color:#94a3b8;font-family:'JetBrains Mono',monospace;">{{ f.size }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#fff;border:1px solid #eef1f4;border-radius:16px;padding:24px 28px;margin-top:14px;">
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:12px;">Tracker 列表</div>
+        <sc-for list="{{ trackers }}" as="t" hint-placeholder-count="4">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#64748b;padding:7px 0;border-bottom:1px solid #f6f7f8;word-break:break-all;">{{ t }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:13px 24px;border-radius:11px;font-size:14px;font-weight:500;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>{{ toast }}
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { view: 'home', query: '', selected: 0, toast: '' };
+
+  copy(text) {
+    try { if (navigator.clipboard) navigator.clipboard.writeText(text); } catch (e) {}
+    this.setState({ toast: '已复制磁力链接到剪贴板' });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 1800);
+  }
+
+  doSearch() {
+    const q = (this.state.query || '').trim() || '星际穿越';
+    this.setState({ query: q, view: 'results' });
+  }
+
+  data() {
+    return [
+      { name: '星际穿越.Interstellar.2014.2160p.BluRay.x265.HDR', format: 'MKV', size: '24.6 GB', seeders: 1842, leechers: 96, files: 3, hot: 96, date: '2024-11-02', hash: '4A7F2C9E1B8D3056A2F9C4E7B1D80953A6F2C1E4' },
+      { name: 'Ubuntu.24.04.LTS.Desktop.amd64', format: 'ISO', size: '5.7 GB', seeders: 3201, leechers: 210, files: 1, hot: 89, date: '2024-04-26', hash: 'B21D9F04C6E7A1358F0B2D4C9E6A17B305F8C2D1' },
+      { name: '三体.全集.4K.重制版.2023', format: 'MKV', size: '88.2 GB', seeders: 964, leechers: 132, files: 30, hot: 84, date: '2024-09-15', hash: 'C93E1A2F7B4D6058E1C0A3F5D8B26049C7E1F3A2' },
+      { name: '赛博朋克2077.Cyberpunk.2077.v2.1.RePack', format: 'BIN', size: '62.4 GB', seeders: 2760, leechers: 540, files: 112, hot: 91, date: '2024-12-05', hash: 'D5A0C3E9F216B7408A3D1C5E9B7204F6D1E3A9C7' },
+      { name: '国家地理.蓝色星球II.Blue.Planet.II.1080p', format: 'MKV', size: '41.0 GB', seeders: 388, leechers: 51, files: 8, hot: 78, date: '2023-12-20', hash: 'E6B1D4F0A327C8519B4E2D6F0C83150A7F2B4D8E' },
+      { name: 'Adobe.Photoshop.2025.v26.0.win64', format: 'ZIP', size: '3.9 GB', seeders: 1120, leechers: 302, files: 8, hot: 81, date: '2025-01-10', hash: 'F72C0E5A1438D962AC5F3E70D194261B8A3C5F0D' },
+      { name: '古典音乐.发烧天碟.合集.FLAC', format: 'FLAC', size: '12.3 GB', seeders: 542, leechers: 44, files: 214, hot: 72, date: '2024-07-01', hash: 'A83D1F6B2549E073BD6A4F81E205372C9B4D6A1F' },
+      { name: '编程珠玑.计算机经典电子书.合集', format: 'PDF', size: '680 MB', seeders: 210, leechers: 12, files: 45, hot: 64, date: '2024-03-08', hash: 'B94E2A7C365AF184CE7B5092F316483DA05E7B2A' },
+    ];
+  }
+
+  magnetOf(r) { return 'magnet:?xt=urn:btih:' + r.hash.toLowerCase(); }
+
+  buildFiles(r) {
+    const files = [{ ext: r.format, name: r.name + '.' + r.format.toLowerCase(), size: r.size }];
+    if (r.files > 1) {
+      files.push({ ext: 'SRT', name: '简繁英双语字幕.srt', size: '156 KB' });
+      files.push({ ext: 'NFO', name: '资源说明.nfo', size: '3 KB' });
+    }
+    return files;
+  }
+
+  renderVals() {
+    const raw = this.data();
+    const results = raw.map((r, i) => Object.assign({}, r, {
+      magnet: this.magnetOf(r),
+      onCopy: () => this.copy(this.magnetOf(r)),
+      onOpen: () => this.setState({ selected: i, view: 'detail' }),
+    }));
+
+    const sel = raw[this.state.selected] || raw[0];
+    const detail = Object.assign({}, sel, {
+      magnet: this.magnetOf(sel),
+      onCopy: () => this.copy(this.magnetOf(sel)),
+    });
+
+    const hotLabels = ['星际穿越 4K', 'Ubuntu 24.04', '三体', '赛博朋克 2077', '蓝色星球 II'];
+    const hotKeywords = hotLabels.map((label) => ({
+      label,
+      onClick: () => this.setState({ query: label, view: 'results' }),
+    }));
+
+    const trackers = [
+      'udp://tracker.opentrackr.org:1337/announce',
+      'udp://open.demonii.com:1337/announce',
+      'udp://tracker.torrent.eu.org:451/announce',
+      'udp://exodus.desync.com:6969/announce',
+    ];
+
+    return {
+      view: this.state.view,
+      isHome: this.state.view === 'home',
+      notHome: this.state.view !== 'home',
+      isResults: this.state.view === 'results',
+      isDetail: this.state.view === 'detail',
+      query: this.state.query,
+      results,
+      detail,
+      detailFiles: this.buildFiles(sel),
+      hotKeywords,
+      trackers,
+      toast: this.state.toast,
+      hasToast: !!this.state.toast,
+      onQueryInput: (e) => this.setState({ query: e.target.value }),
+      onSearchKey: (e) => { if (e.key === 'Enter') this.doSearch(); },
+      doSearch: () => this.doSearch(),
+      goHome: () => this.setState({ view: 'home' }),
+      goResults: () => this.setState({ view: 'results' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

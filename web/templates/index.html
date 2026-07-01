@@ -3,124 +3,309 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>磁力探测 · Magnet Probe</title>
+<title>磁力搜索 · Magnet Probe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0f1420; --card:#1a2233; --fg:#e6edf3; --muted:#8b98ad; --accent:#4f8cff; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,-apple-system,"PingFang SC",sans-serif;
-         background:var(--bg); color:var(--fg); }
-  header { padding:24px 16px; text-align:center; }
-  h1 { margin:0 0 4px; font-size:22px; }
-  .sub { color:var(--muted); font-size:13px; }
-  .bar { max-width:880px; margin:0 auto; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; }
-  input, select, button { padding:10px 12px; border-radius:8px; border:1px solid #2b3550;
-         background:var(--card); color:var(--fg); font-size:14px; }
-  input { flex:1; min-width:200px; }
-  button { background:var(--accent); border:none; cursor:pointer; }
-  button:hover { filter:brightness(1.1); }
-  button:disabled { background:#2b3550; color:var(--muted); cursor:not-allowed; filter:none; }
-  #jump { width:64px; text-align:center; }
-  .results { max-width:880px; margin:16px auto; padding:0 16px; }
-  .item { background:var(--card); border:1px solid #232d44; border-radius:10px;
-          padding:12px 14px; margin-bottom:10px; }
-  .name { font-weight:600; word-break:break-all; }
-  .meta { color:var(--muted); font-size:12px; margin-top:6px; display:flex; gap:14px; flex-wrap:wrap; }
-  .actions { margin-top:8px; }
-  .actions a, .actions button { font-size:12px; padding:6px 10px; }
-  .actions a { color:var(--accent); text-decoration:none; border:1px solid #2b3550;
-               border-radius:6px; }
-  .empty { text-align:center; color:var(--muted); padding:40px; }
-  .stat { text-align:center; color:var(--muted); font-size:12px; margin-top:6px; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Sans SC',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#0f172a;background:#f6f7f8;}
+  ::selection{background:#bbf7d0;}
+  input::placeholder{color:#94a3b8;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+
+  /* 顶部导航 */
+  .topnav{position:sticky;top:0;z-index:20;height:64px;display:flex;align-items:center;gap:20px;padding:0 32px;background:#fff;box-shadow:0 1px 0 #eef1f4;}
+  .brand{display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;}
+  .logo{border-radius:9px;background:#16a34a;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
+  .search-mini{flex:1;max-width:520px;background:#f6f7f8;border-radius:11px;display:flex;align-items:center;padding:4px 4px 4px 16px;}
+  .search-mini input{flex:1;border:none;outline:none;font-size:14px;color:#0f172a;font-family:inherit;background:transparent;}
+
+  .btn-green{background:#16a34a;color:#fff;border:none;font-family:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
+  .btn-green:hover{background:#15803d;}
+  .btn-ghost{background:#fff;border:1px solid #e2e8f0;color:#334155;font-family:inherit;font-weight:500;cursor:pointer;}
+  .btn-ghost:hover{background:#f8fafc;border-color:#cbd5e1;}
+
+  /* 首页 */
+  .home{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 24px;}
+  .home .search-big{width:100%;max-width:660px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(15,23,42,.09);display:flex;align-items:center;padding:8px 8px 8px 24px;}
+  .home .search-big input{flex:1;border:none;outline:none;font-size:16px;color:#0f172a;font-family:inherit;background:transparent;}
+  .chip{font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:20px;padding:8px 16px;cursor:pointer;}
+  .chip:hover{border-color:#16a34a;color:#16a34a;}
+
+  /* 结果 */
+  .wrap{max-width:960px;margin:0 auto;padding:26px 24px 60px;}
+  .sort-tabs{display:flex;gap:4px;background:#fff;border:1px solid #e5e8ec;border-radius:10px;padding:4px;}
+  .sort-tab{font-size:13px;color:#64748b;border-radius:7px;padding:6px 14px;cursor:pointer;}
+  .sort-tab.active{color:#fff;background:#16a34a;font-weight:600;}
+  .card{background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04);display:flex;align-items:center;gap:18px;}
+  .card:hover{border-color:#bbf7d0;box-shadow:0 6px 18px rgba(22,163,74,.10);}
+  .fmt{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:40px;border-radius:10px;background:#f0fdf4;color:#16a34a;font-size:12px;font-weight:700;flex-shrink:0;}
+  .cname{font-size:15px;font-weight:500;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+  .cname:hover{color:#16a34a;}
+  .pill{font-size:12px;color:#64748b;background:#f6f7f8;border-radius:6px;padding:3px 9px;}
+  .hotpill{display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #dcfce7;border-radius:8px;padding:6px 11px;flex-shrink:0;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#16a34a;}
+  .page-num{font-size:13px;color:#475569;background:#fff;border:1px solid #e5e8ec;border-radius:8px;padding:8px 13px;cursor:pointer;}
+  .page-num.active{color:#fff;background:#16a34a;border-color:#16a34a;}
+  .page-num.disabled{color:#cbd5e1;cursor:not-allowed;}
+  #jump{width:58px;text-align:center;border:1px solid #e5e8ec;border-radius:8px;padding:8px 6px;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;}
+
+  /* 详情 */
+  .panel{background:#fff;border:1px solid #eef1f4;border-radius:16px;}
+  .stat-card{background:#fff;border:1px solid #eef1f4;border-radius:14px;padding:20px;}
+  .link{cursor:pointer;}
+  .link:hover{color:#16a34a;}
+
+  /* toast */
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:13px 24px;border-radius:11px;font-size:14px;font-weight:500;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .toast.show{opacity:1;}
+  .empty{text-align:center;color:#94a3b8;padding:60px 20px;font-size:15px;}
+  .spin{text-align:center;color:#94a3b8;padding:40px;font-size:14px;}
 </style>
 </head>
 <body>
-<header>
-  <h1>磁力探测 · Magnet Probe</h1>
-  <div class="sub">基于公开 DHT 网络的种子索引 · 仅供研究学习，请遵守当地法律</div>
-  <div class="stat" id="stat"></div>
-</header>
 
-<div class="bar">
-  <input id="q" placeholder="关键词（支持中英文模糊，如 ubuntu / 电影）" autofocus>
-  <select id="sort">
-    <option value="relevance">相关度</option>
-    <option value="hot">热度</option>
-    <option value="size">大小</option>
-    <option value="date">最新</option>
-  </select>
-  <button onclick="go(1)">搜索</button>
+<!-- 顶部导航（结果页/详情页） -->
+<div class="topnav" id="topnav" style="display:none;">
+  <div class="brand" onclick="goHome()">
+    <div class="logo" style="width:30px;height:30px;font-size:16px;">磁</div>
+    <div style="font-size:17px;font-weight:700;">磁力搜索</div>
+  </div>
+  <div class="search-mini">
+    <input id="q2" placeholder="搜索磁力资源…">
+    <button class="btn-green" style="border-radius:8px;padding:9px 20px;font-size:14px;" onclick="doSearch(document.getElementById('q2').value)">搜索</button>
+  </div>
 </div>
 
-<div class="results" id="results"></div>
-<div class="bar" id="pager" style="justify-content:center; align-items:center; display:none; gap:6px;">
-  <button id="prevBtn" onclick="go(state.page-1)">上一页</button>
-  <span id="pageno" style="color:var(--muted)"></span>
-  <button id="nextBtn" onclick="go(state.page+1)">下一页</button>
-  <span style="color:var(--muted)">跳至</span>
-  <input id="jump" type="number" min="1" placeholder="页码">
-  <button onclick="jumpTo()">跳转</button>
+<!-- 首页 -->
+<div class="home" id="homeView">
+  <div style="flex:0 0 22vh;"></div>
+  <div class="logo" style="width:64px;height:64px;border-radius:19px;font-size:31px;margin-bottom:22px;box-shadow:0 10px 26px rgba(22,163,74,.30);">磁</div>
+  <div style="font-size:30px;font-weight:700;margin-bottom:9px;letter-spacing:1px;">磁力搜索</div>
+  <div style="font-size:15px;color:#64748b;margin-bottom:36px;">简单 · 快速 · 干净的 DHT 磁力聚合搜索</div>
+  <div class="search-big">
+    <input id="q1" placeholder="输入关键词、番号或影片名开始搜索…" autofocus>
+    <button class="btn-green" style="border-radius:12px;padding:15px 34px;font-size:15px;" onclick="doSearch(document.getElementById('q1').value)">搜索</button>
+  </div>
+  <div id="hotChips" style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;justify-content:center;max-width:660px;"></div>
+  <div style="margin-top:48px;font-size:13px;color:#94a3b8;">已收录 <b id="statTotal" style="color:#16a34a;">…</b> 个磁力资源 · DHT 实时更新</div>
+  <div style="flex:1;"></div>
 </div>
+
+<!-- 结果 -->
+<div class="wrap" id="resultsView" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:14px;color:#64748b;" id="resultMeta"></div>
+    <div class="sort-tabs" id="sortTabs"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;" id="cards"></div>
+  <div id="pager" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:26px;flex-wrap:wrap;"></div>
+</div>
+
+<!-- 详情 -->
+<div class="wrap" id="detailView" style="display:none;max-width:840px;"></div>
+
+<div class="toast" id="toast"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></span><span id="toastMsg"></span></div>
 
 <script>
-const state = { page: 1, totalPages: 1 };
-function fmtSize(n){ if(!n) return "?"; const u=["B","KB","MB","GB","TB"]; let i=0;
-  while(n>=1024 && i<u.length-1){ n/=1024; i++; } return n.toFixed(1)+u[i]; }
-function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-function scrollTop(){ window.scrollTo({ top: 0, behavior: "smooth" }); }
+const SIZE = 10;
+const TRACKERS = [
+  "udp://tracker.opentrackr.org:1337/announce",
+  "udp://open.demonii.com:1337/announce",
+  "udp://tracker.torrent.eu.org:451/announce",
+  "udp://exodus.desync.com:6969/announce",
+  "udp://tracker.openbittorrent.com:6969/announce"
+];
+const SORTS = [
+  {label:"综合", val:"relevance"},
+  {label:"热度", val:"hot"},
+  {label:"时间", val:"date"},
+  {label:"大小", val:"size"}
+];
+const HOT_KEYWORDS = ["ubuntu", "1080p", "flac", "2024", "4k"];
 
-async function go(page){
-  if(page < 1) page = 1;
-  if(state.totalPages && page > state.totalPages) page = state.totalPages;
-  state.page = page;
-  const q = document.getElementById("q").value.trim();
-  const sort = document.getElementById("sort").value;
-  const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&sort=${sort}&page=${page}&size=20`);
-  const data = await r.json();
-  render(data);
-  scrollTop();                         // 翻页/跳转后自动回到顶部
+const state = { view:"home", query:"", sort:"relevance", page:1, totalPages:1, items:[], detail:null };
+
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function fmtSize(n){ if(!n) return "?"; const u=["B","KB","MB","GB","TB"]; let i=0; n=+n;
+  while(n>=1024 && i<u.length-1){ n/=1024; i++; } return n.toFixed(1)+" "+u[i]; }
+function fmtDate(iso){ return (iso||"").slice(0,10); }
+function extOf(path){ const m=/\.([A-Za-z0-9]{1,5})$/.exec(path||""); return m?m[1]:""; }
+function deriveFormat(it){
+  let ext = extOf(it.name);
+  if(!ext && it.files && it.files.length) ext = extOf(it.files[0].path);
+  if(ext) return ext.toUpperCase().slice(0,5);
+  return (it.file_count>1) ? "DIR" : "BIN";
 }
-function jumpTo(){
-  const v = parseInt(document.getElementById("jump").value, 10);
-  if(!isNaN(v)) go(v);
+function buildMagnet(infohash, name){
+  let m = "magnet:?xt=urn:btih:" + infohash;
+  if(name) m += "&dn=" + encodeURIComponent(name);
+  for(const t of TRACKERS) m += "&tr=" + encodeURIComponent(t);
+  return m;
 }
-function render(data){
-  const box = document.getElementById("results");
-  if(!data.items.length){ box.innerHTML = '<div class="empty">没有结果（爬虫需运行一段时间积累数据）</div>';
-    document.getElementById("pager").style.display="none"; return; }
-  box.innerHTML = data.items.map(it => `
-    <div class="item">
-      <div class="name">${esc(it.name)}</div>
-      <div class="meta">
-        <span>${fmtSize(it.length)}</span>
-        <span>${it.file_count} 文件</span>
-        <span>🔥 ${it.hot}</span>
-        <span>${(it.created_at||"").slice(0,10)}</span>
-      </div>
-      <div class="actions">
-        <a href="${it.magnet}">打开磁力</a>
-        <button onclick="navigator.clipboard.writeText('${it.magnet}')">复制链接</button>
-      </div>
-    </div>`).join("");
-  state.totalPages = data.total_pages || 1;
-  const pager = document.getElementById("pager");
-  pager.style.display = "flex";
-  document.getElementById("pageno").textContent =
-    `第 ${data.page} / ${state.totalPages} 页（共 ${data.total} 条）`;
-  document.getElementById("prevBtn").disabled = data.page <= 1;
-  document.getElementById("nextBtn").disabled = data.page >= state.totalPages;
-  const jump = document.getElementById("jump");
-  jump.max = state.totalPages;
-  jump.value = "";
-  jump.placeholder = data.page;
+function scrollTop(){ window.scrollTo({top:0, behavior:"smooth"}); }
+
+let toastTimer;
+function toast(msg){
+  document.getElementById("toastMsg").textContent = msg;
+  const el = document.getElementById("toast"); el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove("show"), 1800);
 }
+function copyMagnet(m){ try{ navigator.clipboard && navigator.clipboard.writeText(m); }catch(e){} toast("已复制磁力链接到剪贴板"); }
+
+function show(view){
+  state.view = view;
+  document.getElementById("homeView").style.display    = view==="home"    ? "flex" : "none";
+  document.getElementById("resultsView").style.display = view==="results" ? "block": "none";
+  document.getElementById("detailView").style.display  = view==="detail"  ? "block": "none";
+  document.getElementById("topnav").style.display      = view==="home"    ? "none" : "flex";
+}
+
+function goHome(){ show("home"); loadStats(); }
+
 async function loadStats(){
-  try{ const r = await fetch("/api/stats"); const s = await r.json();
-    document.getElementById("stat").textContent = "已收录 " + s.total + " 条种子"; }catch(e){}
+  try{ const s = await (await fetch("/api/stats")).json();
+    document.getElementById("statTotal").textContent = (s.total||0).toLocaleString(); }catch(e){}
 }
-document.getElementById("q").addEventListener("keydown", e => { if(e.key==="Enter") go(1); });
-document.getElementById("jump").addEventListener("keydown", e => { if(e.key==="Enter") jumpTo(); });
+
+function doSearch(q){
+  q = (q||"").trim();
+  state.query = q; state.page = 1;
+  document.getElementById("q1").value = q;
+  document.getElementById("q2").value = q;
+  show("results");
+  fetchResults();
+}
+
+async function fetchResults(){
+  const cards = document.getElementById("cards");
+  cards.innerHTML = '<div class="spin">搜索中…</div>';
+  document.getElementById("pager").innerHTML = "";
+  renderSortTabs();
+  const t0 = performance.now();
+  let data;
+  try{
+    const url = `/api/search?q=${encodeURIComponent(state.query)}&sort=${state.sort}&page=${state.page}&size=${SIZE}`;
+    data = await (await fetch(url)).json();
+  }catch(e){ cards.innerHTML = '<div class="empty">请求失败，请稍后重试</div>'; return; }
+  const secs = ((performance.now()-t0)/1000).toFixed(2);
+  state.items = data.items||[];
+  state.totalPages = data.total_pages||1;
+
+  document.getElementById("resultMeta").innerHTML =
+    state.query
+      ? `关于 <b style="color:#0f172a;">${esc(state.query)}</b> 找到 <b style="color:#0f172a;">${(data.total||0).toLocaleString()}</b> 条结果 · ${secs} 秒`
+      : `共 <b style="color:#0f172a;">${(data.total||0).toLocaleString()}</b> 条资源 · ${secs} 秒`;
+
+  if(!state.items.length){ cards.innerHTML = '<div class="empty">没有找到结果（爬虫需运行一段时间积累数据）</div>'; return; }
+  cards.innerHTML = state.items.map((it,i)=>cardHTML(it,i)).join("");
+  renderPager();
+  scrollTop();
+}
+
+function cardHTML(it,i){
+  const magnet = buildMagnet(it.infohash, it.name);
+  return `
+  <div class="card">
+    <span class="fmt mono">${esc(deriveFormat(it))}</span>
+    <div style="flex:1;min-width:0;" onclick="openDetail(${i})">
+      <div class="cname">${esc(it.name)}</div>
+      <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;">
+        <span class="pill mono">${fmtSize(it.length)}</span>
+        <span class="pill">${it.file_count} 文件</span>
+        <span class="pill mono">${fmtDate(it.created_at)}</span>
+      </div>
+    </div>
+    <div class="hotpill">
+      <span class="dot"></span>
+      <span class="mono" style="font-size:14px;font-weight:700;color:#16a34a;">${it.hot||0}</span>
+      <span style="font-size:11px;color:#16a34a;">热度</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button class="btn-ghost" style="padding:9px 14px;border-radius:10px;font-size:13px;" onclick='copyMagnet(${JSON.stringify(magnet)})'>复制</button>
+      <a class="btn-green" style="padding:9px 16px;border-radius:10px;font-size:13px;" href="${magnet}">打开磁力</a>
+    </div>
+  </div>`;
+}
+
+function renderSortTabs(){
+  document.getElementById("sortTabs").innerHTML = SORTS.map(s=>
+    `<span class="sort-tab ${s.val===state.sort?'active':''}" onclick="setSort('${s.val}')">${s.label}</span>`
+  ).join("");
+}
+function setSort(val){ if(val===state.sort) return; state.sort=val; state.page=1; fetchResults(); }
+
+function renderPager(){
+  const tp = state.totalPages, cur = state.page;
+  let html = "";
+  html += `<span class="page-num ${cur<=1?'disabled':''}" ${cur>1?`onclick="gotoPage(${cur-1})"`:''}>‹ 上一页</span>`;
+  const win = [];
+  const from = Math.max(1, cur-2), to = Math.min(tp, cur+2);
+  for(let p=from; p<=to; p++) win.push(p);
+  if(from>1){ html += pageNum(1); if(from>2) html += `<span style="color:#94a3b8;">…</span>`; }
+  for(const p of win) html += pageNum(p);
+  if(to<tp){ if(to<tp-1) html += `<span style="color:#94a3b8;">…</span>`; html += pageNum(tp); }
+  html += `<span class="page-num ${cur>=tp?'disabled':''}" ${cur<tp?`onclick="gotoPage(${cur+1})"`:''}>下一页 ›</span>`;
+  html += `<span style="color:#94a3b8;font-size:13px;margin-left:6px;">跳至</span>`;
+  html += `<input id="jump" type="number" min="1" max="${tp}" placeholder="${cur}" onkeydown="if(event.key==='Enter')jumpTo()">`;
+  html += `<span class="page-num" onclick="jumpTo()">跳转</span>`;
+  document.getElementById("pager").innerHTML = html;
+}
+function pageNum(p){ return `<span class="page-num ${p===state.page?'active':''} mono" onclick="gotoPage(${p})">${p}</span>`; }
+function gotoPage(p){ if(p<1)p=1; if(p>state.totalPages)p=state.totalPages; if(p===state.page)return; state.page=p; fetchResults(); }
+function jumpTo(){ const v=parseInt(document.getElementById("jump").value,10); if(!isNaN(v)) gotoPage(v); }
+
+function openDetail(i){
+  const it = state.items[i]; if(!it) return;
+  state.detail = it;
+  const magnet = buildMagnet(it.infohash, it.name);
+  const files = (it.files||[]);
+  const filesHTML = files.length ? files.map(f=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f6f7f8;">
+      <span class="mono" style="display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:4px 7px;border-radius:6px;background:#f6f7f8;color:#64748b;font-size:10px;font-weight:700;">${esc((extOf(f.path)||'—').toUpperCase())}</span>
+      <div style="flex:1;font-size:14px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.path||it.name)}</div>
+      <div class="mono" style="font-size:13px;color:#94a3b8;">${fmtSize(f.length)}</div>
+    </div>`).join("") : '<div style="color:#94a3b8;font-size:13px;padding:8px 0;">（元数据未包含文件列表）</div>';
+
+  document.getElementById("detailView").innerHTML = `
+    <div class="link" onclick="backToResults()" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#64748b;margin-bottom:16px;">‹ 返回搜索结果</div>
+    <div class="panel" style="padding:28px 30px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <span class="fmt mono" style="padding:8px 12px;height:auto;margin-top:2px;">${esc(deriveFormat(it))}</span>
+        <h1 style="font-size:22px;font-weight:700;margin:0;line-height:1.45;">${esc(it.name)}</h1>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;">
+        <button class="btn-green" style="padding:14px 28px;border-radius:12px;font-size:15px;" onclick='copyMagnet(${JSON.stringify(magnet)})'>复制磁力链接</button>
+        <a class="btn-green" style="padding:14px 28px;border-radius:12px;font-size:15px;background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;" href="${magnet}">打开磁力链接</a>
+      </div>
+      <div class="mono" style="margin-top:18px;font-size:12.5px;color:#64748b;background:#f6f7f8;border-radius:10px;padding:13px 15px;word-break:break-all;line-height:1.6;">${esc(magnet)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px;">
+      <div class="stat-card"><div class="mono" style="font-size:22px;font-weight:700;color:#16a34a;">${it.hot||0}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">热度</div></div>
+      <div class="stat-card"><div class="mono" style="font-size:22px;font-weight:700;color:#334155;">${it.file_count}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">文件数</div></div>
+      <div class="stat-card"><div class="mono" style="font-size:22px;font-weight:700;color:#334155;">${fmtSize(it.length)}</div><div style="font-size:13px;color:#94a3b8;margin-top:5px;">总大小</div></div>
+    </div>
+    <div class="panel" style="padding:24px 28px;margin-top:14px;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">文件列表 <span style="color:#94a3b8;font-weight:400;">(${it.file_count})</span></div>
+      ${filesHTML}
+    </div>
+    <div class="panel" style="padding:24px 28px;margin-top:14px;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">Tracker 列表</div>
+      ${TRACKERS.map(t=>`<div class="mono" style="font-size:12.5px;color:#64748b;padding:7px 0;border-bottom:1px solid #f6f7f8;word-break:break-all;">${esc(t)}</div>`).join("")}
+    </div>`;
+  show("detail");
+  scrollTop();
+}
+function backToResults(){ show("results"); }
+
+// 事件绑定
+document.getElementById("q1").addEventListener("keydown", e=>{ if(e.key==="Enter") doSearch(e.target.value); });
+document.getElementById("q2").addEventListener("keydown", e=>{ if(e.key==="Enter") doSearch(e.target.value); });
+document.getElementById("hotChips").innerHTML = HOT_KEYWORDS.map(k=>`<div class="chip" onclick="doSearch('${k}')">${esc(k)}</div>`).join("");
+
 loadStats();
-go(1);
 </script>
 </body>
 </html>

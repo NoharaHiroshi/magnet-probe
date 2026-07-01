@@ -15,3 +15,6 @@ venv/
 # IDE
 .idea/
 .vscode/
+
+# 设计稿运行时（体积大，仅本地参考）
+design/support.js
